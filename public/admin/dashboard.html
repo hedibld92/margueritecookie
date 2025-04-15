@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Cookie Bliss</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beige: '#fef6e4',
+                        cookie: '#7f5539',
+                    },
+                    fontFamily: {
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-poppins bg-beige min-h-screen">
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-cookie">Cookie Bliss - Administration</h1>
+            <button onclick="logout()" class="text-cookie hover:text-cookie/70">Déconnexion</button>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-bold text-cookie mb-6">Ajouter un nouveau cookie</h2>
+            <form id="addCookieForm" class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Nom du cookie</label>
+                        <input type="text" name="name" class="w-full px-4 py-2 rounded-lg border" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Prix (€)</label>
+                        <input type="number" step="0.10" name="price" class="w-full px-4 py-2 rounded-lg border" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Image</label>
+                    <input type="file" name="image" accept="image/*" class="w-full px-4 py-2 rounded-lg border" required>
+                    <div id="imagePreview" class="mt-2 hidden">
+                        <img src="" alt="Aperçu" class="w-32 h-32 object-cover rounded">
+                    </div>
+                </div>
+                <button type="submit" class="bg-cookie text-white px-6 py-2 rounded-lg hover:bg-cookie/80 transition">
+                    Ajouter
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-xl font-bold text-cookie mb-6">Cookies existants</h2>
+            <div id="cookiesList" class="grid md:grid-cols-3 gap-6">
+                <!-- Les cookies seront ajoutés ici dynamiquement -->
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-6 mt-8">
+            <h2 class="text-xl font-bold text-cookie mb-6">Gérer le contenu du site</h2>
+            
+            <!-- Hero Section -->
+            <div class="mb-8">
+                <h3 class="font-semibold mb-4">Section Hero</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Titre principal</label>
+                        <input type="text" id="heroTitle" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Sous-titre</label>
+                        <input type="text" id="heroSubtitle" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Image de fond</label>
+                        <input type="file" id="heroImage" accept="image/*" class="w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="mb-8">
+                <h3 class="font-semibold mb-4">À propos</h3>
+                <div>
+                    <label class="block text-gray-700 mb-2">Contenu</label>
+                    <textarea id="aboutContent" rows="4" class="w-full px-4 py-2 rounded-lg border"></textarea>
+                </div>
+            </div>
+
+            <!-- Advantages Section -->
+            <div class="mb-8">
+                <h3 class="font-semibold mb-4">Avantages</h3>
+                <div id="advantagesContainer">
+                    <!-- Généré dynamiquement -->
+                </div>
+            </div>
+
+            <button onclick="saveContent()" class="bg-cookie text-white px-6 py-2 rounded-lg hover:bg-cookie/80 transition">
+                Enregistrer les modifications
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // Au début du script, ajoutons une variable pour stocker les cookies
+        let cookies = [];
+
+        // Vérifier l'authentification
+        async function checkAuth() {
+            const response = await fetch('/admin/check-auth');
+            if (!response.ok) {
+                window.location.href = '/admin/login.html';
+            }
+        }
+
+        // Charger les cookies
+        async function loadCookies() {
+            const response = await fetch('/admin/cookies');
+            cookies = await response.json(); // Stocke les cookies dans la variable globale
+            
+            const cookiesList = document.getElementById('cookiesList');
+            cookiesList.innerHTML = cookies.map(cookie => `
+                <div class="bg-beige rounded-lg p-4">
+                    <img src="${cookie.image}" alt="${cookie.name}" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h3 class="font-semibold">${cookie.name}</h3>
+                    <p class="text-cookie font-bold">${cookie.price.toFixed(2)} €</p>
+                    <div class="mt-4 space-x-2">
+                        <button onclick="editCookie('${cookie.id}')" class="text-blue-600 hover:text-blue-800">Modifier</button>
+                        <button onclick="deleteCookie('${cookie.id}')" class="text-red-600 hover:text-red-800">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Prévisualisation de l'image
+        document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.querySelector('img').src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Ajouter un cookie
+        document.getElementById('addCookieForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/admin/cookies', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    e.target.reset();
+                    document.getElementById('imagePreview').classList.add('hidden');
+                    loadCookies();
+                    alert('Cookie ajouté avec succès !');
+                }
+            } catch (error) {
+                alert('Erreur lors de l\'ajout du cookie');
+            }
+        });
+
+        // Modifier un cookie
+        async function editCookie(id) {
+            const cookie = cookies.find(c => c.id === id);
+            if (!cookie) return;
+
+            const formHTML = `
+                <form id="editForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Nom</label>
+                        <input type="text" name="name" value="${cookie.name}" class="w-full px-4 py-2 rounded-lg border" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Prix (€)</label>
+                        <input type="number" step="0.10" name="price" value="${cookie.price}" class="w-full px-4 py-2 rounded-lg border" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Nouvelle image (optionnel)</label>
+                        <input type="file" name="image" accept="image/*" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg border hover:bg-gray-100">Annuler</button>
+                        <button type="submit" class="bg-cookie text-white px-4 py-2 rounded-lg hover:bg-cookie/80">Sauvegarder</button>
+                    </div>
+                </form>
+            `;
+
+            showModal('Modifier le cookie', formHTML);
+
+            document.getElementById('editForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                try {
+                    const response = await fetch(`/admin/cookies/${id}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        closeModal();
+                        loadCookies();
+                        alert('Cookie modifié avec succès !');
+                    }
+                } catch (error) {
+                    alert('Erreur lors de la modification');
+                }
+            });
+        }
+
+        // Fonctions utilitaires pour la modal
+        function showModal(title, content) {
+            const modal = document.createElement('div');
+            modal.id = 'modal';
+            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <h3 class="text-xl font-bold mb-4">${title}</h3>
+                    ${content}
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeModal() {
+            document.getElementById('modal')?.remove();
+        }
+
+        // Déconnexion
+        async function logout() {
+            await fetch('/admin/logout');
+            window.location.href = '/admin/login.html';
+        }
+
+        // Ajouter la fonction deleteCookie
+        async function deleteCookie(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce cookie ?')) return;
+            
+            try {
+                const response = await fetch(`/admin/cookies/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadCookies();
+                    alert('Cookie supprimé avec succès !');
+                }
+            } catch (error) {
+                alert('Erreur lors de la suppression');
+            }
+        }
+
+        // Initialisation
+        checkAuth();
+        loadCookies();
+
+        let siteContent = {};
+
+        async function loadSiteContent() {
+            try {
+                const response = await fetch('/api/site-content');
+                siteContent = await response.json();
+                updateContentForm();
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        }
+
+        function updateContentForm() {
+            // Hero section
+            document.getElementById('heroTitle').value = siteContent.hero.title;
+            document.getElementById('heroSubtitle').value = siteContent.hero.subtitle;
+            
+            // About section
+            document.getElementById('aboutContent').value = siteContent.about.content;
+            
+            // Advantages
+            const advantagesContainer = document.getElementById('advantagesContainer');
+            advantagesContainer.innerHTML = siteContent.advantages.items.map((item, index) => `
+                <div class="mb-4 p-4 border rounded-lg">
+                    <div class="mb-2">
+                        <label class="block text-gray-700 mb-2">Titre</label>
+                        <input type="text" class="w-full px-4 py-2 rounded-lg border" 
+                               value="${item.title}" 
+                               onchange="updateAdvantage(${index}, 'title', this.value)">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Description</label>
+                        <input type="text" class="w-full px-4 py-2 rounded-lg border" 
+                               value="${item.description}" 
+                               onchange="updateAdvantage(${index}, 'description', this.value)">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateAdvantage(index, field, value) {
+            siteContent.advantages.items[index][field] = value;
+        }
+
+        async function saveContent() {
+            try {
+                const formData = new FormData();
+                const heroImage = document.getElementById('heroImage').files[0];
+                
+                if (heroImage) {
+                    formData.append('heroImage', heroImage);
+                }
+                
+                // Mettre à jour le contenu avec les valeurs du formulaire
+                const updatedContent = {
+                    hero: {
+                        ...siteContent.hero,
+                        title: document.getElementById('heroTitle').value,
+                        subtitle: document.getElementById('heroSubtitle').value
+                    },
+                    about: {
+                        ...siteContent.about,
+                        content: document.getElementById('aboutContent').value
+                    },
+                    advantages: siteContent.advantages,
+                    testimonials: siteContent.testimonials,
+                    newsletter: siteContent.newsletter
+                };
+                
+                formData.append('content', JSON.stringify(updatedContent));
+                
+                const response = await fetch('/admin/site-content', {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Erreur lors de la mise à jour');
+                }
+                
+                alert('Contenu mis à jour avec succès !');
+                loadSiteContent();
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la mise à jour du contenu: ' + error.message);
+            }
+        }
+
+        // Charger le contenu au démarrage
+        loadSiteContent();
+    </script>
+</body>
+</html> 

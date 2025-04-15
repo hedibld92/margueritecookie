@@ -1,0 +1,56 @@
+{
+    "hero": {
+        "title": "Des cookies artisanaux, livrés chez toi",
+        "subtitle": "Ingrédients naturels. Faits maison. Livraison rapide.",
+        "buttonText": "Commander maintenant",
+        "backgroundImage": "/hero-cookies.jpg"
+    },
+    "advantages": {
+        "title": "Pourquoi choisir Cookie Bliss ?",
+        "items": [
+            {
+                "icon": "leaf",
+                "title": "100% naturels",
+                "description": "Des ingrédients soigneusement sélectionnés"
+            },
+            {
+                "icon": "hands",
+                "title": "Faits main chaque jour",
+                "description": "Une fabrication artisanale quotidienne"
+            },
+            {
+                "icon": "truck",
+                "title": "Livraison en 24h",
+                "description": "Rapidité et fraîcheur garanties"
+            }
+        ]
+    },
+    "about": {
+        "title": "Notre histoire",
+        "content": "Depuis 2020, nous créons des cookies artisanaux avec passion..."
+    },
+    "testimonials": {
+        "title": "Ils en parlent mieux que nous",
+        "items": [
+            {
+                "image": "https://randomuser.me/api/portraits/women/65.jpg",
+                "text": "Les meilleurs cookies que j'ai jamais goûtés !",
+                "author": "Marie L."
+            },
+            {
+                "image": "https://randomuser.me/api/portraits/men/32.jpg",
+                "text": "La livraison est ultra rapide et les cookies sont divins.",
+                "author": "Thomas R."
+            },
+            {
+                "image": "https://randomuser.me/api/portraits/women/42.jpg",
+                "text": "Un goût authentique qui me rappelle mon enfance.",
+                "author": "Sophie M."
+            }
+        ]
+    },
+    "newsletter": {
+        "title": "Reste informé(e) et gourmand(e)",
+        "buttonText": "S'inscrire"
+    }
+} 

@@ -1,0 +1,20 @@
+[
+    {
+        "id": "1",
+        "name": "Cookie Chocolat Noir",
+        "price": 3.50,
+        "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e"
+    },
+    {
+        "id": "2",
+        "name": "Cookie Caramel Beurre Salé",
+        "price": 3.80,
+        "image": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35"
+    },
+    {
+        "id": "3",
+        "name": "Cookie Praliné Noisettes",
+        "price": 3.80,
+        "image": "https://images.unsplash.com/photo-1573074556015-71d2130f0e63"
+    }
+] 

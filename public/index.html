@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Bliss - Cookies Artisanaux</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <script>
+        // Configuration de Tailwind uniquement
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beige: '#fef6e4',
+                        cookie: '#7f5539',
+                    },
+                    fontFamily: {
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+
+        // Variables du panier
+        let cart = [];
+        let cartTotal = 0;
+
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const cartTotalElement = document.getElementById('cart-total');
+            const cartItems = document.getElementById('cart-items');
+            
+            // Animation du compteur
+            cartCount.classList.add('pulse');
+            setTimeout(() => cartCount.classList.remove('pulse'), 300);
+            
+            cartCount.textContent = cart.length;
+            cartTotalElement.textContent = cartTotal.toFixed(2) + ' €';
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
+                    <div>
+                        <h3 class="font-semibold">${item.name}</h3>
+                        <p class="text-cookie">${item.price.toFixed(2)} €</p>
+                    </div>
+                    <button onclick="removeFromCart('${item.name}')" class="text-red-500 hover:text-red-700 transition-colors duration-200">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            cartTotal += price;
+            updateCartUI();
+            
+            // Animation améliorée
+            const miniCart = document.getElementById('mini-cart');
+            const miniCartItem = document.getElementById('mini-cart-item');
+            miniCartItem.textContent = name;
+            
+            // Reset des classes pour nouvelle animation
+            miniCart.classList.remove('hidden');
+            
+            // Force un reflow pour réinitialiser l'animation
+            void miniCart.offsetWidth;
+            
+            // Démarrer l'animation
+            requestAnimationFrame(() => {
+                miniCart.classList.remove('translate-y-[-20px]', 'opacity-0');
+                miniCart.classList.add('translate-y-0', 'opacity-100');
+            });
+
+            // Fermeture animée
+            setTimeout(() => {
+                miniCart.classList.add('translate-y-[-20px]', 'opacity-0');
+                setTimeout(() => {
+                    miniCart.classList.add('hidden');
+                }, 300);
+            }, 2000);
+        }
+
+        function removeFromCart(name) {
+            const index = cart.findIndex(item => item.name === name);
+            if (index !== -1) {
+                cartTotal -= cart[index].price;
+                cart.splice(index, 1);
+                updateCartUI();
+            }
+        }
+    </script>
+
+    <script>
+        const stripe = Stripe('pk_test_51RBzWrHKtM5eoiIKeqTOcERjWdt7qxH1RHmFynT323OpMBQZ6aLpfhxePrrZwXtOuF4faOv2maZftB4JFasRdtSh00eHZbFDa2');
+    </script>
+
+    <script>
+        // Forcer Stripe à accepter HTTP en développement
+        if (window.location.protocol === 'http:') {
+            const stripeScript = document.querySelector('script[src="https://js.stripe.com/v3/"]');
+            if (stripeScript) {
+                stripeScript.setAttribute('data-dev-mode', 'true');
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .bounce {
+            animation: bounce 0.5s ease;
+        }
+
+        #cart-count {
+            transition: transform 0.3s ease;
+        }
+
+        #cart-count.pulse {
+            transform: scale(1.5);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            #cookiesGrid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+
+            #mini-cart {
+                left: 1rem;
+                right: 1rem;
+                width: auto;
+            }
+
+            .hero-text {
+                font-size: clamp(2rem, 8vw, 3.5rem);
+            }
+        }
+
+        /* Animation du menu mobile */
+        #mobile-menu {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #mobile-menu.slide-in {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #mobile-menu.slide-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body class="font-poppins bg-beige">
+    <!-- Header -->
+    <header class="fixed w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-cookie">Cookie Bliss</a>
+            
+            <!-- Menu Desktop -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#accueil" class="text-cookie hover:text-cookie/70">Accueil</a>
+                <a href="#cookies" class="text-cookie hover:text-cookie/70">Nos Cookies</a>
+                <a href="#histoire" class="text-cookie hover:text-cookie/70">À propos</a>
+                <a href="#contact" class="text-cookie hover:text-cookie/70">Contact</a>
+                <button class="relative" onclick="toggleCart()">
+                    <i class="fas fa-shopping-cart text-cookie text-xl"></i>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-cookie text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                </button>
+            </div>
+
+            <!-- Menu Mobile -->
+            <button class="md:hidden text-cookie" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Menu Mobile -->
+    <div id="mobile-menu" class="hidden fixed inset-0 bg-white z-50 transform transition-transform duration-300">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-cookie">Menu</h2>
+                <button class="text-cookie p-2" onclick="toggleMobileMenu()">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex flex-col space-y-6">
+                <a href="#accueil" onclick="toggleMobileMenu()" class="text-cookie text-xl py-2 border-b border-gray-100 hover:bg-beige transition-colors duration-200">
+                    <i class="fas fa-home mr-3"></i>Accueil
+                </a>
+                <a href="#cookies" onclick="toggleMobileMenu()" class="text-cookie text-xl py-2 border-b border-gray-100 hover:bg-beige transition-colors duration-200">
+                    <i class="fas fa-cookie-bite mr-3"></i>Nos Cookies
+                </a>
+                <a href="#histoire" onclick="toggleMobileMenu()" class="text-cookie text-xl py-2 border-b border-gray-100 hover:bg-beige transition-colors duration-200">
+                    <i class="fas fa-book-open mr-3"></i>À propos
+                </a>
+                <a href="#contact" onclick="toggleMobileMenu()" class="text-cookie text-xl py-2 border-b border-gray-100 hover:bg-beige transition-colors duration-200">
+                    <i class="fas fa-envelope mr-3"></i>Contact
+                </a>
+                <button onclick="toggleMobileCart()" class="flex items-center text-cookie text-xl py-2">
+                    <i class="fas fa-shopping-cart mr-3"></i>
+                    Panier
+                    <span id="mobile-cart-count" class="ml-2 bg-cookie text-white text-sm rounded-full w-6 h-6 flex items-center justify-center">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="relative h-screen flex items-center justify-center" style="background-image: url('hero-cookies.jpg'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="relative text-center text-white px-4">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">Des cookies artisanaux, livrés chez toi</h1>
+            <p class="text-xl mb-8">Ingrédients naturels. Faits maison. Livraison rapide.</p>
+            <button class="bg-cookie text-white px-8 py-3 rounded-full text-lg hover:bg-cookie/80 transition">
+                Commander maintenant
+            </button>
+        </div>
+    </section>
+
+    <!-- Produits -->
+    <section id="cookies" class="py-20 px-4">
+        <div class="container mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-cookie mb-12">Nos cookies best-sellers</h2>
+            <div id="cookiesGrid" class="grid md:grid-cols-3 gap-8">
+                <!-- Les cookies seront chargés dynamiquement ici -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Mini panier notification -->
+    <div id="mini-cart" class="hidden fixed top-24 right-4 transform translate-y-[-20px] opacity-0 transition-all duration-300 bg-white p-4 rounded-lg shadow-lg z-50 flex items-center space-x-3">
+        <div class="bg-green-100 rounded-full p-2">
+            <i class="fas fa-check text-green-500"></i>
+        </div>
+        <div>
+            <p class="font-semibold text-gray-800">Ajouté au panier !</p>
+            <p class="text-sm text-gray-600" id="mini-cart-item"></p>
+        </div>
+    </div>
+
+    <!-- Modal panier -->
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black/50 z-50" onclick="closeCartFromOverlay(event)">
+        <div class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-lg flex flex-col transform transition-transform duration-300 md:w-[400px] w-full">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-cookie">Votre panier</h2>
+                    <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="cart-items" class="space-y-4">
+                    <!-- Les items seront ajoutés dynamiquement ici -->
+                </div>
+            </div>
+            
+            <div class="p-6 border-t bg-beige">
+                <div class="flex justify-between text-lg font-semibold mb-4">
+                    <span>Total</span>
+                    <span id="cart-total">0.00 €</span>
+                </div>
+                <button id="checkout-button" 
+                        class="w-full bg-cookie text-white py-3 rounded-full hover:bg-cookie/80 transition flex items-center justify-center space-x-2">
+                    <span>Procéder au paiement</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const isHidden = mobileMenu.classList.contains('hidden');
+            
+            if (isHidden) {
+                mobileMenu.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    mobileMenu.classList.add('slide-in');
+                    mobileMenu.classList.remove('slide-out');
+                });
+            } else {
+                mobileMenu.classList.add('slide-out');
+                mobileMenu.classList.remove('slide-in');
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function toggleMobileCart() {
+            toggleMobileMenu(); // Ferme le menu mobile
+            setTimeout(() => {
+                toggleCart(); // Ouvre le panier
+            }, 300);
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            const cartContent = modal.querySelector('.transform');
+            
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                cartContent.classList.add('translate-x-full');
+                setTimeout(() => {
+                    cartContent.classList.remove('translate-x-full');
+                    cartContent.classList.add('translate-x-0');
+                }, 10);
+            } else {
+                cartContent.classList.remove('translate-x-0');
+                cartContent.classList.add('translate-x-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function closeCartFromOverlay(event) {
+            if (event.target.id === 'cart-modal') {
+                toggleCart();
+            }
+        }
+
+        document.getElementById('checkout-button').addEventListener('click', async () => {
+            const button = document.getElementById('checkout-button');
+            
+            try {
+                if (cart.length === 0) {
+                    alert('Votre panier est vide');
+                    return;
+                }
+
+                button.textContent = 'Chargement...';
+                button.disabled = true;
+
+                const response = await fetch('/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: cart
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur de paiement');
+                }
+
+                // Redirection directe vers l'URL de Stripe
+                window.location.href = data.url;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Une erreur est survenue lors du paiement. Veuillez réessayer.');
+            } finally {
+                button.textContent = 'Procéder au paiement';
+                button.disabled = false;
+            }
+        });
+
+        // Charger les cookies
+        async function loadCookies() {
+            try {
+                const response = await fetch('/api/cookies');
+                const cookies = await response.json();
+                
+                const cookiesGrid = document.getElementById('cookiesGrid');
+                cookiesGrid.innerHTML = cookies.map(cookie => `
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <img src="${cookie.image}" alt="${cookie.name}" class="w-full h-64 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold mb-2">${cookie.name}</h3>
+                            <p class="text-cookie font-bold mb-4">${cookie.price.toFixed(2)} €</p>
+                            <button onclick="addToCart('${cookie.name}', ${cookie.price})" 
+                                    class="w-full bg-cookie text-white py-2 rounded-full hover:bg-cookie/80 transition">
+                                Ajouter au panier
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erreur lors du chargement des cookies:', error);
+            }
+        }
+
+        // Charger les cookies au chargement de la page
+        loadCookies();
+
+        // Navigation douce
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Mettre à jour la fonction updateCartUI pour inclure le compteur mobile
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const mobileCartCount = document.getElementById('mobile-cart-count');
+            const cartTotalElement = document.getElementById('cart-total');
+            const cartItems = document.getElementById('cart-items');
+            
+            // Animation du compteur
+            cartCount.classList.add('pulse');
+            setTimeout(() => cartCount.classList.remove('pulse'), 300);
+            
+            cartCount.textContent = cart.length;
+            mobileCartCount.textContent = cart.length;
+            cartTotalElement.textContent = cartTotal.toFixed(2) + ' €';
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
+                    <div>
+                        <h3 class="font-semibold">${item.name}</h3>
+                        <p class="text-cookie">${item.price.toFixed(2)} €</p>
+                    </div>
+                    <button onclick="removeFromCart('${item.name}')" class="text-red-500 hover:text-red-700 transition-colors duration-200">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Ajuster la taille des sections sur mobile
+        function adjustMobileHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        window.addEventListener('resize', adjustMobileHeight);
+        adjustMobileHeight();
+
+        // Ajouter dans la fonction loadCookies existante
+        async function loadContent() {
+            try {
+                const response = await fetch('/api/site-content');
+                const content = await response.json();
+                
+                // Mettre à jour le hero
+                const heroSection = document.querySelector('#accueil');
+                const heroTitle = heroSection.querySelector('h1');
+                const heroSubtitle = heroSection.querySelector('p');
+                const heroButton = heroSection.querySelector('button');
+                
+                heroTitle.textContent = content.hero.title;
+                heroSubtitle.textContent = content.hero.subtitle;
+                heroButton.textContent = content.hero.buttonText;
+                if (content.hero.backgroundImage) {
+                    heroSection.style.backgroundImage = `url('${content.hero.backgroundImage}')`;
+                }
+
+                // Mettre à jour les avantages
+                const advantagesSection = document.querySelector('#histoire');
+                const advantagesTitle = advantagesSection.querySelector('h2');
+                advantagesTitle.textContent = content.advantages.title;
+                
+                const advantagesItems = advantagesSection.querySelectorAll('.grid > div');
+                content.advantages.items.forEach((item, index) => {
+                    const advantageDiv = advantagesItems[index];
+                    advantageDiv.querySelector('h3').textContent = item.title;
+                    advantageDiv.querySelector('p').textContent = item.description;
+                });
+
+                // Mettre à jour la section À propos
+                const aboutSection = document.querySelector('#histoire:not(:first-of-type)');
+                aboutSection.querySelector('h2').textContent = content.about.title;
+                aboutSection.querySelector('p').textContent = content.about.content;
+
+                // Mettre à jour les témoignages
+                const testimonialsSection = document.querySelector('#contact:not(:last-of-type)');
+                testimonialsSection.querySelector('h2').textContent = content.testimonials.title;
+                
+                const testimonialItems = testimonialsSection.querySelectorAll('.grid > div');
+                content.testimonials.items.forEach((item, index) => {
+                    const testimonialDiv = testimonialItems[index];
+                    testimonialDiv.querySelector('img').src = item.image;
+                    testimonialDiv.querySelector('p:first-of-type').textContent = `"${item.text}"`;
+                    testimonialDiv.querySelector('p:last-of-type').textContent = item.author;
+                });
+
+                // Mettre à jour la newsletter
+                const newsletterSection = document.querySelector('#contact:last-of-type');
+                newsletterSection.querySelector('h2').textContent = content.newsletter.title;
+                newsletterSection.querySelector('button').textContent = content.newsletter.buttonText;
+
+            } catch (error) {
+                console.error('Erreur lors du chargement du contenu:', error);
+            }
+        }
+
+        // Appeler la fonction au chargement de la page
+        document.addEventListener('DOMContentLoaded', loadContent);
+    </script>
+
+    <!-- Avantages -->
+    <section id="histoire" class="bg-white py-20 px-4">
+        <div class="container mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-cookie mb-12">Pourquoi choisir Cookie Bliss ?</h2>
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div class="p-6">
+                    <i class="fas fa-leaf text-4xl text-cookie mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">100% naturels</h3>
+                    <p class="text-gray-600">Des ingrédients soigneusement sélectionnés</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-hands text-4xl text-cookie mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Faits main chaque jour</h3>
+                    <p class="text-gray-600">Une fabrication artisanale quotidienne</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-truck text-4xl text-cookie mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Livraison en 24h</h3>
+                    <p class="text-gray-600">Rapidité et fraîcheur garanties</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Témoignages -->
+    <section id="contact" class="py-20 px-4">
+        <div class="container mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-cookie mb-12">Ils en parlent mieux que nous</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Marie" class="w-20 h-20 rounded-full mx-auto mb-4">
+                    <p class="text-gray-600 mb-4">"Les meilleurs cookies que j'ai jamais goûtés !"</p>
+                    <p class="font-semibold">Marie L.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Thomas" class="w-20 h-20 rounded-full mx-auto mb-4">
+                    <p class="text-gray-600 mb-4">"La livraison est ultra rapide et les cookies sont divins."</p>
+                    <p class="font-semibold">Thomas R.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <img src="https://randomuser.me/api/portraits/women/42.jpg" alt="Sophie" class="w-20 h-20 rounded-full mx-auto mb-4">
+                    <p class="text-gray-600 mb-4">"Un goût authentique qui me rappelle mon enfance."</p>
+                    <p class="font-semibold">Sophie M.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- À propos -->
+    <section id="histoire" class="bg-white py-20 px-4">
+        <div class="container mx-auto max-w-2xl text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-cookie mb-8">Notre histoire</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Depuis 2020, nous créons des cookies artisanaux avec passion. Tout a commencé dans notre petite cuisine familiale, 
+                où nous expérimentions différentes recettes pour créer le cookie parfait. Aujourd'hui, nous sommes fiers de 
+                partager notre amour des cookies avec vous, en utilisant uniquement les meilleurs ingrédients et en préservant 
+                notre savoir-faire artisanal. Chaque cookie est fait à la main, avec amour et attention, pour vous offrir une 
+                expérience gourmande inoubliable.
+            </p>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section id="contact" class="py-20 px-4 bg-cookie text-white">
+        <div class="container mx-auto max-w-xl text-center">
+            <h2 class="text-3xl font-bold mb-8">Reste informé(e) et gourmand(e)</h2>
+            <form class="flex flex-col md:flex-row gap-4">
+                <input type="email" placeholder="Ton email" class="flex-1 px-4 py-3 rounded-full text-gray-800">
+                <button class="bg-white text-cookie px-8 py-3 rounded-full hover:bg-gray-100 transition">
+                    S'inscrire
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white py-12 px-4">
+        <div class="container mx-auto">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-cookie mb-4">Cookie Bliss</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-cookie hover:text-cookie/70"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-cookie hover:text-cookie/70"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-cookie mb-4">Liens utiles</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 hover:text-cookie">Mentions légales</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-cookie">CGV</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-cookie">FAQ</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center text-gray-600 border-t border-gray-200 pt-8">
+                <p>&copy; 2024 Cookie Bliss. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 
