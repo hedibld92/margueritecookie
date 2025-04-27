@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nos Cookies - MargueriteCookie</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beige: '#fef6e4',
+                        cookie: '#7f5539',
+                    },
+                    fontFamily: {
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .ingredients-modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .cookie-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .cookie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(127, 85, 57, 0.1);
+        }
+
+        .ingredients-btn {
+            transition: all 0.3s ease;
+        }
+
+        .ingredients-btn:hover {
+            background-color: rgba(127, 85, 57, 0.1);
+        }
+
+        .best-seller-badge {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+        }
+
+        .cookie-image-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cookie-image-container img {
+            transition: transform 0.5s ease;
+        }
+
+        .cookie-card:hover .cookie-image-container img {
+            transform: scale(1.05);
+        }
+
+        .category-btn.active {
+            background-color: #7f5539;
+            color: white;
+        }
+    </style>
+</head>
+<body class="font-poppins bg-beige min-h-screen">
+    <!-- Header -->
+    <header class="fixed w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-cookie">MargueriteCookie</a>
+            
+            <!-- Menu Desktop -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-cookie hover:text-cookie/70">Accueil</a>
+                <a href="/nos-cookies.html" class="text-cookie hover:text-cookie/70">Nos Cookies</a>
+                <a href="/#histoire" class="text-cookie hover:text-cookie/70">À propos</a>
+                <button class="relative" onclick="toggleCart()">
+                    <i class="fas fa-shopping-cart text-cookie text-xl"></i>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-cookie text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                </button>
+            </div>
+
+            <!-- Menu Mobile -->
+            <button class="md:hidden text-cookie" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Menu Mobile -->
+    <div id="mobile-menu" class="hidden fixed inset-0 bg-white z-50 transform transition-transform duration-300">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-cookie">Menu</h2>
+                <button class="text-cookie p-2" onclick="toggleMobileMenu()">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex flex-col space-y-6">
+                <a href="/" class="text-cookie text-xl py-2 border-b border-gray-100 hover:bg-beige transition-colors duration-200">
+                    <i class="fas fa-home mr-3"></i>Accueil
+                </a>
+                <a href="/nos-cookies.html" class="text-cookie text-xl py-2 border-b border-gray-100 hover:bg-beige transition-colors duration-200">
+                    <i class="fas fa-cookie-bite mr-3"></i>Nos Cookies
+                </a>
+                <a href="/#histoire" class="text-cookie text-xl py-2 border-b border-gray-100 hover:bg-beige transition-colors duration-200">
+                    <i class="fas fa-book-open mr-3"></i>À propos
+                </a>
+                <button onclick="toggleMobileCart()" class="flex items-center text-cookie text-xl py-2">
+                    <i class="fas fa-shopping-cart mr-3"></i>
+                    Panier
+                    <span id="mobile-cart-count" class="ml-2 bg-cookie text-white text-sm rounded-full w-6 h-6 flex items-center justify-center">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- En-tête de la page avec bannière -->
+    <section class="pt-32 pb-12 relative overflow-hidden">
+        <div class="absolute inset-0 bg-cookie/10 z-0"></div>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-4xl mx-auto text-center">
+                <span class="text-cookie font-medium mb-4 inline-block">🍪 Fait maison avec amour</span>
+                <h1 class="text-4xl md:text-5xl font-bold text-cookie mb-6">Découvrez nos cookies artisanaux</h1>
+                <p class="text-gray-600 text-lg mb-8">Chaque cookie est préparé avec passion, en utilisant des ingrédients soigneusement sélectionnés pour vous offrir une expérience gustative unique.</p>
+                <div class="flex flex-wrap justify-center gap-4 mb-8">
+                    <div class="flex items-center bg-white rounded-full px-6 py-3 shadow-sm">
+                        <i class="fas fa-check-circle text-cookie mr-2"></i>
+                        <span class="text-gray-700">Ingrédients naturels</span>
+                    </div>
+                    <div class="flex items-center bg-white rounded-full px-6 py-3 shadow-sm">
+                        <i class="fas fa-truck text-cookie mr-2"></i>
+                        <span class="text-gray-700">Livraison 24h</span>
+                    </div>
+                    <div class="flex items-center bg-white rounded-full px-6 py-3 shadow-sm">
+                        <i class="fas fa-heart text-cookie mr-2"></i>
+                        <span class="text-gray-700">Fait main</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filtres -->
+    <section class="py-8 bg-white shadow-sm">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="filterCookies('all')" class="category-btn active px-6 py-2 rounded-full border-2 border-cookie text-cookie hover:bg-cookie hover:text-white transition-colors">
+                    Tous nos cookies
+                </button>
+                <button onclick="filterCookies('best-sellers')" class="category-btn px-6 py-2 rounded-full border-2 border-cookie text-cookie hover:bg-cookie hover:text-white transition-colors">
+                    Best-sellers
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Liste des cookies -->
+    <section class="py-16 px-4">
+        <div class="container mx-auto">
+            <div id="allCookiesGrid" class="grid md:grid-cols-3 gap-8">
+                <!-- Les cookies seront chargés dynamiquement ici -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Garanties -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8 text-center">
+                <div class="p-6">
+                    <i class="fas fa-cookie-bite text-4xl text-cookie mb-4"></i>
+                    <h3 class="font-semibold mb-2">Fraîcheur garantie</h3>
+                    <p class="text-gray-600">Préparés chaque jour dans notre atelier</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-leaf text-4xl text-cookie mb-4"></i>
+                    <h3 class="font-semibold mb-2">100% Naturel</h3>
+                    <p class="text-gray-600">Sans conservateurs ni additifs</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-undo text-4xl text-cookie mb-4"></i>
+                    <h3 class="font-semibold mb-2">Satisfait ou remboursé</h3>
+                    <p class="text-gray-600">Garantie satisfaction 24h</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-lock text-4xl text-cookie mb-4"></i>
+                    <h3 class="font-semibold mb-2">Paiement sécurisé</h3>
+                    <p class="text-gray-600">Transactions 100% sécurisées</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal des ingrédients -->
+    <div id="ingredients-modal" class="ingredients-modal hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 transform transition-transform">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-cookie" id="modal-title"></h3>
+                <button onclick="closeIngredientsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="ingredients-list" class="space-y-2">
+                <!-- Les ingrédients seront ajoutés ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mini panier notification -->
+    <div id="mini-cart" class="hidden fixed top-24 right-4 transform translate-y-[-20px] opacity-0 transition-all duration-300 bg-white p-4 rounded-lg shadow-lg z-50 flex items-center space-x-3">
+        <div class="bg-green-100 rounded-full p-2">
+            <i class="fas fa-check text-green-500"></i>
+        </div>
+        <div>
+            <p class="font-semibold text-gray-800">Ajouté au panier !</p>
+            <p class="text-sm text-gray-600" id="mini-cart-item"></p>
+        </div>
+    </div>
+
+    <!-- Modal panier -->
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black/50 z-50">
+        <div class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-lg flex flex-col transform transition-transform duration-300">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-cookie">Votre panier</h2>
+                    <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="cart-items" class="space-y-4">
+                    <!-- Les items seront ajoutés dynamiquement ici -->
+                </div>
+            </div>
+            
+            <div class="p-6 border-t bg-beige">
+                <div class="flex justify-between text-lg font-semibold mb-4">
+                    <span>Total</span>
+                    <span id="cart-total">0.00 €</span>
+                </div>
+                <button onclick="checkout()" class="w-full bg-cookie text-white py-3 rounded-full hover:bg-cookie/80 transition">
+                    Procéder au paiement
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let cartTotal = 0;
+        let allCookies = [];
+
+        // Charger tous les cookies
+        async function loadAllCookies() {
+            try {
+                const response = await fetch('/api/cookies');
+                allCookies = await response.json();
+                displayCookies(allCookies);
+            } catch (error) {
+                console.error('Erreur lors du chargement des cookies:', error);
+            }
+        }
+
+        function displayCookies(cookies) {
+            const cookiesGrid = document.getElementById('allCookiesGrid');
+            cookiesGrid.innerHTML = cookies.map(cookie => `
+                <div class="cookie-card bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="cookie-image-container">
+                        <img src="${cookie.image}" alt="${cookie.name}" class="w-full h-64 object-cover">
+                        ${cookie.isBestSeller ? `
+                            <div class="absolute top-4 right-4">
+                                <span class="best-seller-badge px-4 py-2 rounded-full text-white text-sm font-semibold shadow-lg">
+                                    Best-seller
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2">${cookie.name}</h3>
+                                <p class="text-cookie font-bold text-lg">${cookie.price.toFixed(2)} €</p>
+                            </div>
+                            <button onclick="showIngredients('${cookie.id}')" 
+                                    class="ingredients-btn text-cookie p-2 rounded-full hover:bg-cookie/10">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <button onclick="addToCart('${cookie.name}', ${cookie.price})" 
+                                    class="w-full bg-cookie text-white py-3 rounded-full hover:bg-cookie/80 transition flex items-center justify-center space-x-2">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Ajouter au panier</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCookies(filter) {
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            let filteredCookies;
+            if (filter === 'best-sellers') {
+                filteredCookies = allCookies.filter(cookie => cookie.isBestSeller);
+            } else {
+                filteredCookies = allCookies;
+            }
+            displayCookies(filteredCookies);
+        }
+
+        function showIngredients(cookieId) {
+            const cookie = allCookies.find(c => c.id === cookieId);
+            if (!cookie || !cookie.ingredients) return;
+
+            const modal = document.getElementById('ingredients-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const ingredientsList = document.getElementById('ingredients-list');
+
+            modalTitle.textContent = `Ingrédients - ${cookie.name}`;
+            ingredientsList.innerHTML = cookie.ingredients.map(ingredient => `
+                <p class="text-gray-600">• ${ingredient}</p>
+            `).join('');
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeIngredientsModal() {
+            document.getElementById('ingredients-modal').classList.add('hidden');
+        }
+
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const mobileCartCount = document.getElementById('mobile-cart-count');
+            const cartTotalElement = document.getElementById('cart-total');
+            const cartItems = document.getElementById('cart-items');
+            
+            cartCount.textContent = cart.length;
+            mobileCartCount.textContent = cart.length;
+            cartTotalElement.textContent = cartTotal.toFixed(2) + ' €';
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
+                    <div>
+                        <h3 class="font-semibold">${item.name}</h3>
+                        <p class="text-cookie">${item.price.toFixed(2)} €</p>
+                    </div>
+                    <button onclick="removeFromCart('${item.name}')" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            cartTotal += price;
+            updateCartUI();
+            
+            const miniCart = document.getElementById('mini-cart');
+            const miniCartItem = document.getElementById('mini-cart-item');
+            miniCartItem.textContent = name;
+            
+            miniCart.classList.remove('hidden');
+            void miniCart.offsetWidth;
+            miniCart.classList.remove('translate-y-[-20px]', 'opacity-0');
+            
+            setTimeout(() => {
+                miniCart.classList.add('translate-y-[-20px]', 'opacity-0');
+                setTimeout(() => {
+                    miniCart.classList.add('hidden');
+                }, 300);
+            }, 2000);
+        }
+
+        function removeFromCart(name) {
+            const index = cart.findIndex(item => item.name === name);
+            if (index !== -1) {
+                cartTotal -= cart[index].price;
+                cart.splice(index, 1);
+                updateCartUI();
+            }
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', loadAllCookies);
+    </script>
+</body>
+</html> 

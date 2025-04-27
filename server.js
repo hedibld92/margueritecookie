@@ -3,15 +3,16 @@ const session = require('express-session');
 const stripe = require('stripe')('sk_test_51RBzWrHKtM5eoiIK0SeGBaK8w2HYVBOLP69k88HYb0c1u1ovuoAYBzyByKFTxqnnKjwZQvEdYrw9KdVK5zjRp2qu00DRBoYzmt');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
 const app = express();
 
 // Configuration de multer pour l'upload d'images
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadDir = 'public/uploads';
-        if (!fs.promises.access(uploadDir, fs.constants.F_OK)) {
-            fs.promises.mkdir(uploadDir, { recursive: true });
+        // Créer le dossier s'il n'existe pas
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
         }
         cb(null, uploadDir);
     },
@@ -45,24 +46,24 @@ app.use(session({
 
 // Remplacer les variables globales par des fonctions de lecture/écriture
 async function readCookies() {
-    const data = await fs.readFile(path.join(__dirname, 'data', 'cookies.json'), 'utf8');
-    return JSON.parse(data);
+    const data = await fs.promises.readFile(path.join(__dirname, 'data', 'cookies.json'), 'utf8');
+    return JSON.parse(data).cookies;
 }
 
 async function writeCookies(cookies) {
-    await fs.writeFile(
+    await fs.promises.writeFile(
         path.join(__dirname, 'data', 'cookies.json'),
-        JSON.stringify(cookies, null, 2)
+        JSON.stringify({ cookies }, null, 2)
     );
 }
 
 async function readSiteContent() {
-    const data = await fs.readFile(path.join(__dirname, 'data', 'site-content.json'), 'utf8');
+    const data = await fs.promises.readFile(path.join(__dirname, 'data', 'site-content.json'), 'utf8');
     return JSON.parse(data);
 }
 
 async function writeSiteContent(content) {
-    await fs.writeFile(
+    await fs.promises.writeFile(
         path.join(__dirname, 'data', 'site-content.json'),
         JSON.stringify(content, null, 2)
     );
@@ -253,64 +254,129 @@ app.post('/admin/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// Liste des cookies
-app.get('/admin/cookies', requireAuth, (req, res) => {
-    // À remplacer par votre logique de base de données
-    res.json(cookies);
-});
-
-// Modifier un cookie
-app.put('/admin/cookies/:id', requireAuth, upload.single('image'), (req, res) => {
-    const { id } = req.params;
-    const { name, price } = req.body;
-    
-    const cookieIndex = cookies.findIndex(c => c.id === id);
-    if (cookieIndex === -1) {
-        return res.status(404).json({ error: 'Cookie non trouvé' });
-    }
-
-    const updatedCookie = {
-        ...cookies[cookieIndex],
-        name: name || cookies[cookieIndex].name,
-        price: price ? parseFloat(price) : cookies[cookieIndex].price,
-    };
-
-    if (req.file) {
-        // Supprimer l'ancienne image si elle existe
-        const oldImagePath = path.join(__dirname, 'public', new URL(cookies[cookieIndex].image).pathname);
-        if (fs.promises.access(oldImagePath, fs.constants.F_OK)) {
-            fs.promises.unlink(oldImagePath);
+// Route pour mettre à jour le contenu "à propos"
+app.post('/admin/update-about', requireAuth, async (req, res) => {
+    try {
+        const { title, content } = req.body;
+        if (!title || !content) {
+            return res.status(400).json({ error: 'Le titre et le contenu sont requis' });
         }
-        updatedCookie.image = `/uploads/${req.file.filename}`;
-    }
 
-    cookies[cookieIndex] = updatedCookie;
-    res.json(updatedCookie);
+        const siteContent = await readSiteContent();
+        siteContent.about = {
+            title,
+            content
+        };
+        
+        await writeSiteContent(siteContent);
+        res.json({ success: true, message: 'Contenu mis à jour avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du contenu:', error);
+        res.status(500).json({ error: 'Erreur lors de la mise à jour du contenu' });
+    }
 });
 
-// Modifier la route d'ajout pour gérer l'upload
-app.post('/admin/cookies', requireAuth, upload.single('image'), async (req, res) => {
+// Liste des cookies
+app.get('/admin/cookies', requireAuth, async (req, res) => {
     try {
         const cookies = await readCookies();
-        const newCookie = {
-            id: Date.now().toString(),
-            name: req.body.name,
-            price: parseFloat(req.body.price),
-            image: `/uploads/${req.file.filename}`
-        };
-        cookies.push(newCookie);
-        await writeCookies(cookies);
-        res.json(newCookie);
+        res.json(cookies);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
+// Modifier un cookie
+app.put('/admin/cookies/:id', requireAuth, upload.single('image'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const cookies = await readCookies();
+        const cookieIndex = cookies.findIndex(c => c.id === id);
+        
+        if (cookieIndex === -1) {
+            return res.status(404).json({ error: 'Cookie non trouvé' });
+        }
+
+        const updatedCookie = {
+            ...cookies[cookieIndex],
+            name: req.body.name || cookies[cookieIndex].name,
+            price: req.body.price ? parseFloat(req.body.price) : cookies[cookieIndex].price,
+            ingredients: req.body.ingredients ? JSON.parse(req.body.ingredients) : cookies[cookieIndex].ingredients,
+            isBestSeller: req.body.isBestSeller === 'true'
+        };
+
+        if (req.file) {
+            // Supprimer l'ancienne image si elle existe
+            if (cookies[cookieIndex].image && cookies[cookieIndex].image.startsWith('/uploads/')) {
+                const oldImagePath = path.join(__dirname, 'public', cookies[cookieIndex].image);
+                try {
+                    await fs.promises.access(oldImagePath);
+                    await fs.promises.unlink(oldImagePath);
+                } catch (error) {
+                    console.log('Pas d\'ancienne image à supprimer');
+                }
+            }
+            updatedCookie.image = `/uploads/${req.file.filename}`;
+        }
+
+        cookies[cookieIndex] = updatedCookie;
+        await writeCookies(cookies);
+        res.json(updatedCookie);
+    } catch (error) {
+        console.error('Erreur lors de la modification:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Modifier la route d'ajout pour gérer l'upload
+app.post('/admin/cookies', requireAuth, upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Une image est requise' });
+        }
+
+        const cookies = await readCookies();
+        const newCookie = {
+            id: Date.now().toString(),
+            name: req.body.name,
+            price: parseFloat(req.body.price),
+            image: `/uploads/${req.file.filename}`,
+            ingredients: JSON.parse(req.body.ingredients || '[]'),
+            isBestSeller: req.body.isBestSeller === 'true'
+        };
+
+        cookies.push(newCookie);
+        await writeCookies(cookies);
+        res.json(newCookie);
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Supprimer un cookie
-app.delete('/admin/cookies/:id', requireAuth, (req, res) => {
-    const { id } = req.params;
-    cookies = cookies.filter(cookie => cookie.id !== id);
-    res.json({ success: true });
+app.delete('/admin/cookies/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const cookies = await readCookies();
+        const cookieToDelete = cookies.find(c => c.id === id);
+        
+        if (cookieToDelete && cookieToDelete.image) {
+            const imagePath = path.join(__dirname, 'public', cookieToDelete.image);
+            try {
+                await fs.promises.access(imagePath);
+                await fs.promises.unlink(imagePath);
+            } catch (error) {
+                console.log('Image non trouvée');
+            }
+        }
+        
+        const updatedCookies = cookies.filter(cookie => cookie.id !== id);
+        await writeCookies(updatedCookies);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Ajouter une route pour obtenir les cookies publics
@@ -326,20 +392,64 @@ app.get('/api/site-content', (req, res) => {
 
 app.put('/admin/site-content', requireAuth, upload.single('heroImage'), async (req, res) => {
     try {
-        if (!req.body.content) {
-            return res.status(400).json({ error: 'Contenu manquant' });
-        }
-
         const content = JSON.parse(req.body.content);
         
+        // Si une nouvelle image hero est uploadée
         if (req.file) {
+            // Supprimer l'ancienne image si elle existe
+            const oldImagePath = path.join(__dirname, 'public', content.hero.backgroundImage);
+            try {
+                await fs.promises.access(oldImagePath);
+                await fs.promises.unlink(oldImagePath);
+            } catch (error) {
+                console.log('Pas d\'ancienne image à supprimer');
+            }
             content.hero.backgroundImage = `/uploads/${req.file.filename}`;
         }
-        
+
+        // Mettre à jour le contenu dans le fichier
         await writeSiteContent(content);
+        
+        // Mettre à jour la variable globale
+        siteContent = content;
+
         res.json({ success: true, content });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Erreur lors de la mise à jour:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Nouvelle route pour obtenir uniquement les best-sellers
+app.get('/api/best-sellers', async (req, res) => {
+    try {
+        const cookies = await readCookies();
+        const bestSellers = cookies.filter(cookie => cookie.isBestSeller);
+        res.json(bestSellers);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Route pour mettre à jour le statut best-seller
+app.put('/admin/cookies/:id/best-seller', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isBestSeller } = req.body;
+        
+        const cookies = await readCookies();
+        const cookieIndex = cookies.findIndex(c => c.id === id);
+        
+        if (cookieIndex === -1) {
+            return res.status(404).json({ error: 'Cookie non trouvé' });
+        }
+        
+        cookies[cookieIndex].isBestSeller = isBestSeller;
+        await writeCookies(cookies);
+        
+        res.json(cookies[cookieIndex]);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 

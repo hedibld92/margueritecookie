@@ -1,20 +1,60 @@
-[
+{
+  "cookies": [
     {
-        "id": "1",
-        "name": "Cookie Chocolat Noir",
-        "price": 3.50,
-        "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e"
+      "id": "1",
+      "name": "Cookie Chocolat Noir",
+      "price": 3.5,
+      "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e",
+      "ingredients": [
+        "Farine de blé T55",
+        "Chocolat noir 70%",
+        "Beurre fermier",
+        "Œufs bio",
+        "Sucre roux",
+        "Sel de Guérande"
+      ],
+      "isBestSeller": true
     },
     {
-        "id": "2",
-        "name": "Cookie Caramel Beurre Salé",
-        "price": 3.80,
-        "image": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35"
+      "id": "2",
+      "name": "Cookie Caramel Beurre Salé",
+      "price": 3.8,
+      "image": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35",
+      "ingredients": [
+        "Farine de blé T55",
+        "Caramel au beurre salé maison",
+        "Beurre fermier",
+        "Œufs bio",
+        "Sucre roux",
+        "Sel de Guérande"
+      ],
+      "isBestSeller": true
     },
     {
-        "id": "3",
-        "name": "Cookie Praliné Noisettes",
-        "price": 3.80,
-        "image": "https://images.unsplash.com/photo-1573074556015-71d2130f0e63"
+      "id": "3",
+      "name": "Cookie Praliné Noisettes",
+      "price": 3.8,
+      "image": "https://images.unsplash.com/photo-1573074556015-71d2130f0e63",
+      "ingredients": [
+        "Farine de blé T55",
+        "Praliné noisette maison",
+        "Noisettes torréfiées",
+        "Beurre fermier",
+        "Œufs bio",
+        "Sucre roux",
+        "Sel de Guérande"
+      ],
+      "isBestSeller": true
+    },
+    {
+      "id": "1745763370163",
+      "name": "Cookie chocolat noir  ",
+      "price": 78,
+      "image": "/uploads/1745763370159.jpeg",
+      "ingredients": [
+        "vanille"
+      ],
+      "isBestSeller": false
     }
-] 
+  ]
+}
