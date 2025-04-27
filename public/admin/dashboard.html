@@ -129,7 +129,9 @@
 
         // Vérifier l'authentification
         async function checkAuth() {
-            const response = await fetch('/admin/check-auth');
+            const response = await fetch('/admin/check-auth', {
+                credentials: 'include'
+            });
             if (!response.ok) {
                 window.location.href = '/admin/login.html';
             }
@@ -137,7 +139,9 @@
 
         // Charger les cookies
         async function loadCookies() {
-            const response = await fetch('/admin/cookies');
+            const response = await fetch('/admin/cookies', {
+                credentials: 'include'
+            });
             cookies = await response.json();
             
             const cookiesList = document.getElementById('cookiesList');
@@ -198,6 +202,7 @@
             try {
                 const response = await fetch('/admin/cookies', {
                     method: 'POST',
+                    credentials: 'include',
                     body: formData
                 });
 
@@ -262,6 +267,7 @@
                 try {
                     const response = await fetch(`/admin/cookies/${id}`, {
                         method: 'PUT',
+                        credentials: 'include',
                         body: formData
                     });
 
@@ -296,7 +302,10 @@
 
         // Déconnexion
         async function logout() {
-            await fetch('/admin/logout');
+            await fetch('/admin/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
             window.location.href = '/admin/login.html';
         }
 
@@ -306,7 +315,8 @@
             
             try {
                 const response = await fetch(`/admin/cookies/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -353,16 +363,15 @@
 
                 formData.append('content', JSON.stringify(updatedContent));
 
-                // Envoyer la mise à jour complète
                 const response = await fetch('/admin/site-content', {
                     method: 'PUT',
+                    credentials: 'include',
                     body: formData
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Mettre à jour le contenu local avec la réponse du serveur
                     siteContent = result.content;
                     alert('Contenu mis à jour avec succès !');
                 } else {
@@ -421,6 +430,7 @@
             try {
                 const response = await fetch(`/admin/cookies/${id}/best-seller`, {
                     method: 'PUT',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },
