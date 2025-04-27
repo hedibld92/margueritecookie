@@ -1,6 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const stripe = require('stripe')('sk_test_51RBzWrHKtM5eoiIK0SeGBaK8w2HYVBOLP69k88HYb0c1u1ovuoAYBzyByKFTxqnnKjwZQvEdYrw9KdVK5zjRp2qu00DRBoYzmt');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -38,10 +39,13 @@ const upload = multer({
 
 // Ajout de la configuration de session
 app.use(session({
-    secret: 'cookie_bliss_secret_key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // Mettre à true en production avec HTTPS
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 heures
+    }
 }));
 
 // Remplacer les variables globales par des fonctions de lecture/écriture
@@ -453,4 +457,9 @@ app.put('/admin/cookies/:id/best-seller', requireAuth, async (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Server running on http://localhost:3000')); 
+// Endpoint pour récupérer la clé publique Stripe
+app.get('/api/stripe-key', (req, res) => {
+    res.json({ publicKey: process.env.STRIPE_PUBLIC_KEY });
+});
+
+app.listen(process.env.PORT || 3000, () => console.log(`Server running on http://localhost:${process.env.PORT || 3000}`)); 

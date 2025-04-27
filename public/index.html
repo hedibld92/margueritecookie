@@ -25,6 +25,19 @@
             }
         }
 
+        // Initialisation de Stripe
+        let stripe;
+        async function initStripe() {
+            try {
+                const response = await fetch('/api/stripe-key');
+                const { publicKey } = await response.json();
+                stripe = Stripe(publicKey);
+            } catch (error) {
+                console.error('Erreur lors de l\'initialisation de Stripe:', error);
+            }
+        }
+        initStripe();
+
         // Variables du panier
         let cart = [];
         let cartTotal = 0;
@@ -93,10 +106,6 @@
                 updateCartUI();
             }
         }
-    </script>
-
-    <script>
-        const stripe = Stripe('pk_test_51RBzWrHKtM5eoiIKeqTOcERjWdt7qxH1RHmFynT323OpMBQZ6aLpfhxePrrZwXtOuF4faOv2maZftB4JFasRdtSh00eHZbFDa2');
     </script>
 
     <script>
