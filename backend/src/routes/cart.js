@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const cookiesData = require('../data/cookies');
 
 // Middleware pour vérifier si le panier existe dans la session
 const initCart = (req, res, next) => {
@@ -21,20 +22,20 @@ router.post('/add', initCart, (req, res) => {
   try {
     const { cookieId, quantity = 1 } = req.body;
     
-    // Simulation de recherche du cookie (à remplacer par une vraie base de données)
-    const cookie = {
-      id: cookieId,
-      name: 'Cookie Example',
-      price: 2.50
-    };
+    // Recherche du cookie dans les données
+    const cookie = cookiesData.find(c => c.id === parseInt(cookieId));
+    
+    if (!cookie) {
+      return res.status(404).json({ error: 'Cookie non trouvé' });
+    }
 
-    const cartItem = req.session.cart.items.find(item => item.cookieId === cookieId);
+    const cartItem = req.session.cart.items.find(item => item.cookieId === parseInt(cookieId));
 
     if (cartItem) {
       cartItem.quantity += quantity;
     } else {
       req.session.cart.items.push({
-        cookieId,
+        cookieId: cookie.id,
         name: cookie.name,
         price: cookie.price,
         quantity

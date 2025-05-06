@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const cookiesData = require('../data/cookies');
 
 // Configuration de multer pour l'upload d'images
 const storage = multer.diskStorage({
@@ -31,26 +32,7 @@ const upload = multer({
 // Routes
 router.get('/', async (req, res) => {
   try {
-    // Simulation de données (à remplacer par une vraie base de données)
-    const cookies = [
-      {
-        id: 1,
-        name: 'Cookie Chocolat Noir',
-        description: 'Délicieux cookie aux pépites de chocolat noir',
-        price: 2.50,
-        image: '/uploads/cookies/chocolate.jpg',
-        category: 'Chocolat'
-      },
-      {
-        id: 2,
-        name: 'Cookie Vanille Macadamia',
-        description: 'Cookie moelleux à la vanille et aux noix de macadamia',
-        price: 2.80,
-        image: '/uploads/cookies/vanilla.jpg',
-        category: 'Vanille'
-      }
-    ];
-    res.json(cookies);
+    res.json(cookiesData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

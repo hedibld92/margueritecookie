@@ -8,7 +8,7 @@ const cartStore = useCartStore()
 const isProcessing = ref(false)
 
 const cartItems = computed(() => cartStore.items)
-const subtotal = computed(() => cartStore.subtotal)
+const subtotal = computed(() => cartStore.total)
 const shippingCost = computed(() => cartItems.value.length > 0 ? 5.90 : 0)
 const total = computed(() => subtotal.value + shippingCost.value)
 
@@ -19,18 +19,39 @@ const formatPrice = (price) => {
   }).format(price)
 }
 
-const incrementQuantity = (item) => {
-  cartStore.updateItemQuantity(item._id, item.quantity + 1)
-}
-
-const decrementQuantity = (item) => {
-  if (item.quantity > 1) {
-    cartStore.updateItemQuantity(item._id, item.quantity - 1)
+const incrementQuantity = async (item) => {
+  try {
+    if (!item || !item.cookieId) {
+      throw new Error('Article invalide')
+    }
+    await cartStore.updateQuantity(item.cookieId, item.quantity + 1)
+  } catch (error) {
+    console.error('Erreur lors de l\'augmentation de la quantité:', error)
   }
 }
 
-const removeItem = (item) => {
-  cartStore.removeItem(item._id)
+const decrementQuantity = async (item) => {
+  if (item.quantity > 1) {
+    try {
+      if (!item || !item.cookieId) {
+        throw new Error('Article invalide')
+      }
+      await cartStore.updateQuantity(item.cookieId, item.quantity - 1)
+    } catch (error) {
+      console.error('Erreur lors de la diminution de la quantité:', error)
+    }
+  }
+}
+
+const removeItem = async (item) => {
+  try {
+    if (!item || !item.cookieId) {
+      throw new Error('Article invalide')
+    }
+    await cartStore.removeFromCart(item.cookieId)
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'article:', error)
+  }
 }
 
 const checkout = async () => {
@@ -38,6 +59,7 @@ const checkout = async () => {
     isProcessing.value = true
     // Logique de paiement à implémenter
     await new Promise(resolve => setTimeout(resolve, 2000)) // Simulation
+    await cartStore.clearCart()
     router.push('/confirmation')
   } catch (error) {
     console.error('Erreur lors du paiement:', error)
@@ -62,9 +84,9 @@ const checkout = async () => {
 
       <div v-else class="panier__content">
         <div class="panier__items">
-          <div v-for="item in cartItems" :key="item._id" class="cart-item">
+          <div v-for="item in cartItems" :key="item.cookieId" class="cart-item">
             <div class="cart-item__image">
-              <img :src="item.image" :alt="item.name">
+              <div class="cart-item__emoji">🍪</div>
             </div>
             <div class="cart-item__details">
               <h3 class="cart-item__name">{{ item.name }}</h3>
@@ -207,13 +229,14 @@ const checkout = async () => {
     width: 80px;
     height: 80px;
     border-radius: var(--border-radius);
-    overflow: hidden;
+    background: linear-gradient(45deg, #fef3c7, #fde68a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  &__emoji {
+    font-size: 2.5rem;
   }
 
   &__details {

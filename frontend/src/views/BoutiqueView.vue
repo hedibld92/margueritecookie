@@ -33,7 +33,10 @@ const formatPrice = (price) => {
 const addToCart = async (cookie) => {
   try {
     isAddingToCart.value = true
-    await cartStore.addToCart(cookie._id)
+    if (!cookie || !cookie.id) {
+      throw new Error('Cookie invalide')
+    }
+    await cartStore.addToCart(cookie.id)
     // Feedback visuel
     const notification = document.createElement('div')
     notification.className = 'notification'
@@ -78,7 +81,7 @@ onMounted(() => {
     <section class="products" v-if="!loading">
       <div class="container">
         <div class="products__grid">
-          <div v-for="cookie in cookies" :key="cookie._id" class="product-card">
+          <div v-for="cookie in cookies" :key="cookie.id" class="product-card">
             <div class="product-card__image">
               <div class="product-card__emoji">🍪</div>
             </div>
