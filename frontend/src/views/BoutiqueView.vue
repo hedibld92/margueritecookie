@@ -123,7 +123,7 @@ onMounted(() => {
 }
 
 .hero {
-  background: linear-gradient(135deg, var(--primary-color), darken(#f59e0b, 20%));
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   padding: 6rem 0 4rem;
   text-align: center;
   margin-bottom: 2rem;
@@ -185,7 +185,7 @@ onMounted(() => {
 }
 
 .product-card {
-  background: white;
+  background: var(--background-color);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
@@ -198,7 +198,7 @@ onMounted(() => {
 
   &__image {
     height: 200px;
-    background: linear-gradient(45deg, #fef3c7, #fde68a);
+    background: linear-gradient(45deg, var(--background-color), #fde68a);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -222,7 +222,7 @@ onMounted(() => {
   }
 
   &__description {
-    color: var(--text-color);
+    color: var(--secondary-color);
     margin-bottom: 1.5rem;
     line-height: 1.6;
   }
@@ -237,7 +237,7 @@ onMounted(() => {
   &__price {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--secondary-color);
   }
 
   .btn {
@@ -266,7 +266,7 @@ onMounted(() => {
   }
 
   p {
-    color: var(--text-color);
+    color: var(--secondary-color);
     font-size: 1.1rem;
   }
 }
